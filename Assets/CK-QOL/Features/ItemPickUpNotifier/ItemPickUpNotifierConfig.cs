@@ -1,31 +1,31 @@
-using System.Diagnostics.CodeAnalysis;
 using CK_QOL.Core.Config;
-using CK_QOL.Core.Features;
 using CoreLib.Data.Configuration;
 
 namespace CK_QOL.Features.ItemPickUpNotifier
 {
-    [SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
-    internal sealed class ItemPickUpNotifierConfig : ConfigBase
-    {
-        internal static bool ApplyIsEnabled(IFeature feature)
-        {
-            var acceptableValues = new AcceptableValueList<bool>(true, false);
-            var description = new ConfigDescription($"Enable the '{feature.DisplayName}' ({feature.FeatureType}) feature? {feature.Description}", acceptableValues);
-            var definition = new ConfigDefinition(feature.Name, nameof(feature.IsEnabled));
-            var entry = Config.Bind(definition, true, description);
+	/// <summary>
+	///     Configuration class for the <see cref="ItemPickUpNotifier" /> feature, handling the enabled state and aggregate delay.
+	///     This class uses <see cref="ConfigBase{TFeature}" /> to manage the configuration settings for ItemPickUpNotifier.
+	/// </summary>
+	internal sealed class ItemPickUpNotifierConfig : ConfigBase<ItemPickUpNotifier>
+	{
+		protected override bool DefaultIsEnabled => true;
+		internal ConfigEntry<float> AggregateDelay { get; private set; }
 
-            return entry.Value;
-        }
+		internal override void Initialize(ItemPickUpNotifier feature)
+		{
+			base.Initialize(feature);
+			
+			AggregateDelay = ApplyAggregateDelay();
+		}
 
-        internal static float ApplyAggregateDelay(ItemPickUpNotifier feature)
-        {
-            var acceptableValues = new AcceptableValueRange<float>(1f, 30f);
-            var description = new ConfigDescription("The delay in seconds to aggregate picked up items before displaying the notification.", acceptableValues);
-            var definition = new ConfigDefinition(feature.Name, nameof(feature.AggregateDelay));
-            var entry = Config.Bind(definition, 1.5f, description);
+		private ConfigEntry<float> ApplyAggregateDelay()
+		{
+			var acceptableValues = new AcceptableValueRange<float>(1f, 10f);
+			var description = new ConfigDescription("The delay in seconds to aggregate picked-up items before displaying the notification.", acceptableValues);
+			var definition = new ConfigDefinition(Feature.Name, nameof(Feature.AggregateDelay));
 
-            return entry.Value;
-        }
-    }
+			return Config.Bind(definition, 2f, description);
+		}
+	}
 }

@@ -1,31 +1,31 @@
-using System.Diagnostics.CodeAnalysis;
 using CK_QOL.Core.Config;
-using CK_QOL.Core.Features;
 using CoreLib.Data.Configuration;
 
 namespace CK_QOL.Features.QuickHeal
 {
-    [SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
-    internal sealed class QuickHealConfig : ConfigBase
-    {
-        internal static bool ApplyIsEnabled(IFeature feature)
-        {
-            var acceptableValues = new AcceptableValueList<bool>(true, false);
-            var description = new ConfigDescription($"Enable the '{feature.DisplayName}' ({feature.FeatureType}) feature? {feature.Description}", acceptableValues);
-            var definition = new ConfigDefinition(feature.Name, nameof(feature.IsEnabled));
-            var entry = Config.Bind(definition, false, description);
+	/// <summary>
+	///     Configuration class for the <see cref="QuickHeal" /> feature, handling key binding, enabled state, and equipment slot.
+	///     This class uses <see cref="ConfigBase{TFeature}" /> to manage the configuration settings for QuickHeal.
+	/// </summary>
+	internal sealed class QuickHealConfig : ConfigBase<QuickHeal>
+	{
+		protected override bool DefaultIsEnabled => true;
+		internal ConfigEntry<int> EquipmentSlotIndex { get; private set; }
 
-            return entry.Value;
-        }
+		internal override void Initialize(QuickHeal feature)
+		{
+			base.Initialize(feature);
 
-        internal static int ApplyEquipmentSlotIndex(QuickHeal feature)
-        {
-            var acceptableValues = new AcceptableValueRange<int>(0, 9);
-            var description = new ConfigDescription("Set the healable slot index. It's the count/number of the slot minus 1.", acceptableValues);
-            var definition = new ConfigDefinition(feature.Name, nameof(feature.EquipmentSlotIndex));
-            var entry = Config.Bind(definition, 9, description);
+			EquipmentSlotIndex = ApplyEquipmentSlotIndex();
+		}
 
-            return entry.Value;
-        }
-    }
+		private ConfigEntry<int> ApplyEquipmentSlotIndex()
+		{
+			var acceptableValues = new AcceptableValueRange<int>(0, 9);
+			var description = new ConfigDescription("The equipment slot index for healing potions.", acceptableValues);
+			var definition = new ConfigDefinition(Feature.Name, nameof(Feature.EquipmentSlotIndex));
+
+			return Config.Bind(definition, 9, description);
+		}
+	}
 }

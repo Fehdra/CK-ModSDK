@@ -1,22 +1,13 @@
-using System.Diagnostics.CodeAnalysis;
 using CK_QOL.Core.Config;
-using CK_QOL.Core.Features;
-using CoreLib.Data.Configuration;
 
 namespace CK_QOL.Features.ShiftClick
 {
-    [SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
-    internal sealed class ShiftClickConfig : ConfigBase
-    {
-        internal static bool ApplyIsEnabled(IFeature feature)
-        {
-            var acceptableValues = new AcceptableValueList<bool>(true, false);
-            var description = new ConfigDescription($"Enable the '{feature.DisplayName}' ({feature.FeatureType}) feature? {feature.Description}", acceptableValues);
-            var definition = new ConfigDefinition(feature.Name, nameof(feature.IsEnabled));
-
-            var entry = Config.Bind(definition, true, description);
-
-            return entry.Value;
-        }
-    }
+	/// <summary>
+	///     Configuration class for the <see cref="ShiftClick" /> feature, handling the key binding and enabled state.
+	///     This class uses <see cref="ConfigBase{TFeature}" /> to manage the configuration settings for ShiftClick.
+	/// </summary>
+	internal sealed class ShiftClickConfig : ConfigBase<ShiftClick>
+	{
+		protected override bool DefaultIsEnabled => true;
+	}
 }

@@ -22,9 +22,11 @@ MonoBehaviour:
     requiredOn: 3
     files:
     - path: Localization/Localization.csv
+    - path: Scripts/Features/Wormhole/WormholeConfig.cs
+    - path: Scripts/Features/Wormhole/Wormhole.cs
+    - path: Scripts/Features/Wormhole/Patches/MapMarkerUIElementPatches.cs
     - path: Scripts/Features/ShiftClick/ShiftClickConfig.cs
     - path: Scripts/Features/ShiftClick/ShiftClick.cs
-    - path: Scripts/Features/QuickSummon/TomeType.cs
     - path: Scripts/Features/QuickSummon/QuickSummonConfig.cs
     - path: Scripts/Features/QuickSummon/QuickSummon.cs
     - path: Scripts/Features/QuickStash/QuickStashConfig.cs
@@ -54,10 +56,14 @@ MonoBehaviour:
     - path: Scripts/Core/Patches/ItemDiscoveryTextUIPatches.cs
     - path: Scripts/Core/ModSettings.cs
     - path: Scripts/Core/ModLogger.cs
+    - path: Scripts/Core/Helpers/TransformHelpers.cs
     - path: Scripts/Core/Helpers/TextHelper.cs
     - path: Scripts/Core/Helpers/MathHelpers.cs
+    - path: Scripts/Core/Helpers/InventoryHandlerHelper.cs
     - path: Scripts/Core/Helpers/CoroutineHelper.cs
     - path: Scripts/Core/Helpers/ChestHelper.cs
+    - path: Scripts/Core/Helpers/AssetHelper.cs
+    - path: Scripts/Core/Features/IKeyBindableFeature.cs
     - path: Scripts/Core/Features/IFeature.cs
     - path: Scripts/Core/Features/FeatureType.cs
     - path: Scripts/Core/Features/FeatureBase.cs
@@ -74,6 +80,12 @@ MonoBehaviour:
       required: 1
     - modName: CoreLib.RewiredExtension
       required: 1
+    - modName: CK-QOL.ConfigUI
+      required: 0
   modPath: Assets\CK-QOL
-  buildBurst: 1
+  forceReimport: 1
+  buildBundles: 1
+  cacheBundles: 0
   buildLinux: 1
+  assets: []
+  lastBuildLinux: 0

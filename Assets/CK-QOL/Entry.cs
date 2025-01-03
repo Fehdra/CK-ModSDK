@@ -12,132 +12,149 @@ using CK_QOL.Features.QuickHeal;
 using CK_QOL.Features.QuickStash;
 using CK_QOL.Features.QuickSummon;
 using CK_QOL.Features.ShiftClick;
+using CK_QOL.Features.Wormhole;
 using CoreLib;
 using CoreLib.Localization;
 using CoreLib.RewiredExtension;
 using CoreLib.Util.Extensions;
 using PugMod;
 using Rewired;
-using Object=UnityEngine.Object;
+using UnityEngine;
 
 namespace CK_QOL
 {
-    public class Entry : IMod
-    {
-        private readonly List<IFeature> _features = new();
-        internal static LoadedMod ModInfo { get; private set; }
-        internal static Player RewiredPlayer { get; private set; }
+	public class Entry : IMod
+	{
+		private readonly List<IFeature> _features = new();
 
-        #region IMod
+		internal static LoadedMod ModInfo { get; private set; }
+		internal static AssetBundle AssetBundle => ModInfo.AssetBundles.First();
+		internal static Player RewiredPlayer { get; private set; }
 
-        public void EarlyInit()
-        {
-            ModLogger.Info($"{ModSettings.Name} v{ModSettings.Version} by {ModSettings.Author} with contributors {ModSettings.Contributors}");
+		public void EarlyInit()
+		{
+			InitializeModInfo();
+			LoadModules();
+			InitializeFeatures();
+		}
 
-            ModInfo = this.GetModInfo();
-            if (ModInfo is null)
-            {
-                ModLogger.Error("Failed to load!");
-                Shutdown();
+		public void Init()
+		{
+			ModLogger.Info("Mod successfully initialized.");
+		}
 
-                return;
-            }
+		public void Shutdown()
+		{
+			ModLogger.Warn("Mod shutdown initiated.");
+		}
 
-            CoreLibMod.LoadModules(typeof(LocalizationModule));
-            CoreLibMod.LoadModule(typeof(RewiredExtensionModule));
+		public void ModObjectLoaded(Object obj)
+		{
+		}
 
-            RewiredExtensionModule.rewiredStart += () => RewiredPlayer = ReInput.players.GetPlayer(0);
+		public void Update()
+		{
+			foreach (var feature in _features.Where(feature => feature.IsEnabled))
+			{
+				feature.Update();
+			}
+		}
 
-            ModLogger.Info("Loading features..");
+		private void InitializeModInfo()
+		{
+			ModLogger.Info($"{ModSettings.Name} v{ModSettings.Version} by {ModSettings.Author} with contributors {ModSettings.Contributors}");
 
-            _features.AddRange(new IFeature[]
-            {
-                CraftingRange.Instance,
-                QuickStash.Instance,
-                ItemPickUpNotifier.Instance,
-                NoDeathPenalty.Instance,
-                NoEquipmentDurabilityLoss.Instance,
-                QuickHeal.Instance,
-                QuickEat.Instance,
-                QuickSummon.Instance,
-                ShiftClick.Instance,
-                ChestAutoUnlock.Instance
-            });
+			ModInfo = this.GetModInfo();
+			if (ModInfo is null)
+			{
+				ModLogger.Error("Failed to load mod information.");
+				Shutdown();
+			}
+		}
 
-            foreach (var feature in _features.OrderBy(feature => feature.IsEnabled))
-            {
-                ModLogger.Info($"{feature.DisplayName} ({feature.FeatureType})");
+		private static void LoadModules()
+		{
+			CoreLibMod.LoadModules(typeof(LocalizationModule));
+			CoreLibMod.LoadModule(typeof(RewiredExtensionModule));
 
-                if (feature.IsEnabled)
-                {
-                    switch (feature)
-                    {
-                        case CraftingRange { IsEnabled: true } craftingRange:
-                            ModLogger.Info($"{nameof(craftingRange.MaxRange)}: {craftingRange.MaxRange} ");
-                            ModLogger.Info($"{nameof(craftingRange.MaxChests)}: {craftingRange.MaxChests}");
+			RewiredExtensionModule.rewiredStart += () => RewiredPlayer = ReInput.players.GetPlayer(0);
+		}
 
-                            break;
-                        case QuickStash { IsEnabled: true } quickStash:
-                            ModLogger.Info($"{nameof(quickStash.MaxRange)}: {quickStash.MaxRange} ");
-                            ModLogger.Info($"{nameof(quickStash.MaxChests)}: {quickStash.MaxChests}");
+		private void InitializeFeatures()
+		{
+			_features.AddRange(new IFeature[]
+			{
+				CraftingRange.Instance,
+				QuickStash.Instance,
+				ItemPickUpNotifier.Instance,
+				NoDeathPenalty.Instance,
+				NoEquipmentDurabilityLoss.Instance,
+				QuickHeal.Instance,
+				QuickEat.Instance,
+				QuickSummon.Instance,
+				ShiftClick.Instance,
+				ChestAutoUnlock.Instance,
+				Wormhole.Instance
+			});
 
-                            break;
-                        case ItemPickUpNotifier { IsEnabled: true } itemPickUpNotifier:
-                            ModLogger.Info($"{nameof(itemPickUpNotifier.AggregateDelay)}: {itemPickUpNotifier.AggregateDelay}");
+			foreach (var feature in _features.OrderBy(feature => feature.IsEnabled))
+			{
+				LogFeatureState(feature);
+			}
 
-                            break;
-                        case QuickHeal { IsEnabled: true } quickHeal:
-                            ModLogger.Info($"{nameof(quickHeal.EquipmentSlotIndex)}: {quickHeal.EquipmentSlotIndex}");
+			ModLogger.Info("All features loaded.");
+		}
 
-                            break;
-                        case QuickEat { IsEnabled: true } quickEat:
-                            ModLogger.Info($"{nameof(quickEat.EquipmentSlotIndex)}: {quickEat.EquipmentSlotIndex}");
+		private static void LogFeatureState(IFeature feature)
+		{
+			ModLogger.Info($"{feature.DisplayName} ({feature.FeatureType})");
 
-                            break;
-                        case QuickSummon { IsEnabled: true } quickSummon:
-                            ModLogger.Info($"{nameof(quickSummon.EquipmentSlotIndex)}: {quickSummon.EquipmentSlotIndex}");
+			if (feature.IsEnabled)
+			{
+				switch (feature)
+				{
+					case CraftingRange { IsEnabled: true } craftingRange:
+						ModLogger.Info($"{nameof(craftingRange.MaxRange)}: {craftingRange.MaxRange} ");
+						ModLogger.Info($"{nameof(craftingRange.MaxChests)}: {craftingRange.MaxChests}");
 
-                            break;
-                        case NoDeathPenalty { IsEnabled: true } noDeathPenalty:
-                        case NoEquipmentDurabilityLoss { IsEnabled: true } noEquipmentDurabilityLoss:
-                        case ShiftClick { IsEnabled: true } shiftClick:
-                        case ChestAutoUnlock { IsEnabled: true } chestAutoUnlock:
+						break;
+					case QuickStash { IsEnabled: true } quickStash:
+						ModLogger.Info($"{nameof(quickStash.MaxRange)}: {quickStash.MaxRange} ");
+						ModLogger.Info($"{nameof(quickStash.MaxChests)}: {quickStash.MaxChests}");
 
-                            break;
-                    }
-                }
-                else
-                {
-                    ModLogger.Info("Disabled");
-                }
-            }
+						break;
+					case ItemPickUpNotifier { IsEnabled: true } itemPickUpNotifier:
+						ModLogger.Info($"{nameof(itemPickUpNotifier.AggregateDelay)}: {itemPickUpNotifier.AggregateDelay}");
 
-            ModLogger.Info(".. all features loaded.");
-        }
+						break;
+					case QuickHeal { IsEnabled: true } quickHeal:
+						ModLogger.Info($"{nameof(quickHeal.EquipmentSlotIndex)}: {quickHeal.EquipmentSlotIndex}");
 
-        public void Init()
-        {
-            ModLogger.Info("Loaded successfully.");
-        }
+						break;
+					case QuickEat { IsEnabled: true } quickEat:
+						ModLogger.Info($"{nameof(quickEat.EquipmentSlotIndex)}: {quickEat.EquipmentSlotIndex}");
 
-        public void Shutdown()
-        {
-            ModLogger.Warn("Shutdown initiated.");
-        }
+						break;
+					case QuickSummon { IsEnabled: true } quickSummon:
+						ModLogger.Info($"{nameof(quickSummon.EquipmentSlotIndex)}: {quickSummon.EquipmentSlotIndex}");
 
-        public void ModObjectLoaded(Object obj)
-        {
-        }
+						break;
+					case Wormhole { IsEnabled: true } wormhole:
+						ModLogger.Info($"{nameof(wormhole.RequiredAncientGemstones)}: {wormhole.RequiredAncientGemstones}");
 
-        public void Update()
-        {
-            foreach (var feature in _features.Where(feature => feature.IsEnabled))
-            {
-                feature.Update();
-            }
-        }
+						break;
+					case NoDeathPenalty { IsEnabled: true }:
+					case NoEquipmentDurabilityLoss { IsEnabled: true }:
+					case ShiftClick { IsEnabled: true }:
+					case ChestAutoUnlock { IsEnabled: true }:
 
-        #endregion IMod
-
-    }
+						break;
+				}
+			}
+			else
+			{
+				ModLogger.Info("Disabled");
+			}
+		}
+	}
 }

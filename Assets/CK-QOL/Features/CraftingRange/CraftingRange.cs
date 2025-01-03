@@ -1,87 +1,59 @@
 using System.Collections.Generic;
 using System.Linq;
-using CK_QOL.Core.Config;
 using CK_QOL.Core.Features;
 using CK_QOL.Core.Helpers;
 
 namespace CK_QOL.Features.CraftingRange
 {
 	/// <summary>
-	///     Represents the crafting range feature in the game, which extends the range within which  a player can interact with
-	///     workbenches and nearby chests.
-	///     This feature provides configuration options for adjusting the maximum range and the number  of chests that can be
-	///     considered within proximity for crafting operations.
-	///     The class manages the following functionalities:
-	///     <list type="bullet">
-	///         <item>
-	///             <description>
-	///                 Configuration of the feature's enabled state and crafting range settings,
-	///                 including maximum range (<see cref="MaxRange" />) and maximum chest limit (<see cref="MaxChests" />).
-	///             </description>
-	///         </item>
-	///         <item>
-	///             <description>
-	///                 Determining which chests are within the specified maximum range and adding them to a list of
-	///                 nearby chests (<see cref="Chests" />).
-	///             </description>
-	///         </item>
-	///         <item>
-	///             <description>
-	///                 Executing the logic to clear and update the list of nearby chests based on the configured
-	///                 range and chest limits (<see cref="Execute" /> method).
-	///             </description>
-	///         </item>
-	///     </list>
+	///     Provides the "Crafting Range" feature, which extends the range of crafting stations by including nearby chests
+	///     within a specified maximum range. This allows players to access more chests during crafting without manually
+	///     opening them.
 	/// </summary>
 	/// <remarks>
-	///     This class extends the <see cref="FeatureBase{TFeature}" /> base class to inherit common feature behavior,
-	///     including singleton instantiation, configuration management, and execution control.
+	///     The feature limits the number of chests that can be included in the crafting range to avoid game-breaking issues.
+	///     The <see cref="CraftingRangeConfig" /> class manages the configuration for this feature, including the maximum
+	///     range and the maximum number of chests that can be included.
 	/// </remarks>
-	internal sealed class CraftingRange : FeatureBase<CraftingRange>
-    {
-        public CraftingRange()
-        {
-            ApplyConfigurations();
-        }
+	internal sealed class CraftingRange : FeatureBase<CraftingRange, CraftingRangeConfig>
+	{
+		/// <summary>
+		///     Gets the list of chests that are currently within the crafting range.
+		/// </summary>
+		internal List<Chest> Chests { get; } = new();
 
-        internal List<Chest> Chests { get; } = new();
+		/// <summary>
+		///     Executes the logic to find and store the nearby chests within the specified maximum range.
+		///     It clears the current list of chests and updates it with chests that are within the defined range and limit.
+		/// </summary>
+		public override void Execute()
+		{
+			if (!CanExecute())
+			{
+				return;
+			}
 
-        public override void Execute()
-        {
-            if (!CanExecute()) return;
+			Chests.Clear();
 
-            Chests.Clear();
+			var nearbyChests = ChestHelper.GetNearbyChests(MaxRange).Take(MaxChests).ToList();
 
-            var nearbyChests = ChestHelper.GetNearbyChests(MaxRange)
-                .Take(MaxChests)
-                .ToList();
+			Chests.AddRange(nearbyChests);
+		}
 
-            Chests.AddRange(nearbyChests);
-        }
+		#region IFeature
 
-        #region IFeature
+		public override string Name => nameof(CraftingRange);
+		public override string DisplayName => "Crafting Range";
+		public override string Description => "Extends the crafting range for all kinds of work benches.";
+		public override FeatureType FeatureType => FeatureType.Client;
 
-        public override string Name => nameof(CraftingRange);
-        public override string DisplayName => "Crafting Range";
-        public override string Description => "Extends the crafting range for different kinds of work benches.";
-        public override FeatureType FeatureType => FeatureType.Client;
+		#endregion IFeature
 
-        #endregion IFeature
+		#region Configuration
 
-        #region Configuration
+		internal float MaxRange => Config.MaxRange.Value;
+		internal int MaxChests => Config.MaxChests.Value;
 
-        internal float MaxRange { get; private set; }
-        internal int MaxChests { get; private set; }
-
-        private void ApplyConfigurations()
-        {
-            ConfigBase.Create(this);
-            IsEnabled = CraftingRangeConfig.ApplyIsEnabled(this);
-            MaxRange = CraftingRangeConfig.ApplyMaxRange(this);
-            MaxChests = CraftingRangeConfig.ApplyMaxChests(this);
-        }
-
-        #endregion Configuration
-
-    }
+		#endregion Configuration
+	}
 }
