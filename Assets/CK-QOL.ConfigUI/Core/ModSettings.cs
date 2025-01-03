@@ -25,7 +25,7 @@ namespace CK_QOL.ConfigUI.Core
 		/// <summary>
 		///     The current version of the mod.
 		/// </summary>
-		public const string Version = "1.0.3";
+		public const string Version = "1.0.2";
 
 		/// <summary>
 		///     The author of the mod.
